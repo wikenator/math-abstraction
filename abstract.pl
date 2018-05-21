@@ -30,7 +30,7 @@ if ($test) {
 	print "$abstraction\n";
 	$abstraction = &update_abstraction($abstraction, ['VARIABLE'], $debug);
 	print "$abstraction\n";
-	$abstraction = &update_abstraction($abstraction, ['LITERAL', 'FRACTION'], $debug);
+	$abstraction = &update_abstraction($abstraction, ['EQUALITY'], $debug);
 	print "$abstraction\n";
 
 } else {

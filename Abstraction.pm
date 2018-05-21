@@ -183,9 +183,8 @@ sub update_abstraction {
 		} else {
 			if (exists $idx->{@$next_class[0]}) {
 				$idx = $idx->{@$next_class[0]};
-				$abstraction = join(':', $atree[0 .. $i]);
 
-				return &update_abstraction("$abstraction:@$next_class[0]", [@$next_class[1 .. $#{$next_class}]], $debug);
+				return &update_abstraction(join(':', @atree[0 .. $i-1]) . ":@$next_class[0]", [@$next_class[1 .. $#{$next_class}]], $debug);
 
 			} else {
 				$idx = $idx->{$atree[$i]};
