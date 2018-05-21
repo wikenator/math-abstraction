@@ -134,6 +134,7 @@ sub update_abstraction {
 	$debug = 0 if not defined $debug;
 	our $abstract_tree;
 	my $idx = $abstract_tree;#->{'MATH'};
+	my $idx_cmp = $abstract_tree;
 	my @atree = split(':', $abstraction);
 
 	if ($debug) {
@@ -141,73 +142,71 @@ sub update_abstraction {
 		print STDERR "abstraction: $abstraction\n";
 	}
 
-#	if ($abstraction eq 'MATH') {
-#		foreach (@{$next_class}) { $abstraction .= ":$_"; }
-
-#		$abstraction = &update_abstraction("$abstraction:@{$next_class}[0]", [@{$next_class}[1 .. $#{$next_class}]], $debug);
-#		return $abstraction;
-#	}
-
-	if (!@{$next_class}) { return $abstraction; }
+	# return current abstraction if next_class is empty
+	if (not @{$next_class}) { return $abstraction; }
 
 	# traverse abstraction tree up until the current abstract node
-	foreach $a (@atree) {
-		if ($debug) { print STDERR "atree: $a\n"; }
+	for my $i (0 .. $#atree) {
+		if ($debug) { print STDERR "atree: $atree[$i]\n"; }
 
 		if (ref $idx eq 'ARRAY') {
-			foreach my $item (@{$idx}) {
+			my $found = 0;
+
+			foreach my $item (@$idx) {
 				if (ref $item eq 'HASH') {
-					foreach (keys %{$item}) {
-						if ($_ eq $a) {
+					foreach (keys %$item) {
+						if ($_ eq $atree[$i]) {
+							$idx = $item->{$_};
+							$found = 1;
+
+						} elsif ($_ eq @$next_class[0]) {
 							$idx = $item->{$_};
 							last;
 						}
 					}
 
+					if (not $found) {
+						$abstraction = &update_abstraction("NOPARSE", [], $debug);
+
+						return $abstraction;
+					}
+
 				} elsif (ref \$item eq 'SCALAR' && 
-				$item eq $a) {
+				$item eq $atree[$i]) {
 					$idx = $item;
 					last;
 				}
 			}
 
-			if ($debug) { print STDERR "arr tree: $a\n" . Dumper($idx) . "\n"; }
+			if ($debug) { print STDERR "arr tree: $atree[$i]\n" . Dumper($idx) . "\n"; }
 
 		} else {
-			$idx = $idx->{$a};
+			if (exists $idx->{@$next_class[0]}) {
+				$idx = $idx->{@$next_class[0]};
+				$abstraction = join(':', $atree[0 .. $i]);
 
-			if ($debug) { print STDERR "current tree: $a\n" . Dumper($idx) . "\n"; }
-		}
-	}
+				return &update_abstraction("$abstraction:@$next_class[0]", [@$next_class[1 .. $#{$next_class}]], $debug);
 
-	# compare current abstraction path to new abstraction classes
-	for my $i (0 .. $#{$next_class}) {
-		for my $j (0 .. $#atree) {
-			
+			} else {
+				$idx = $idx->{$atree[$i]};
+			}
+
+			if ($debug) { print STDERR "current tree: $atree[$i]\n" . Dumper($idx) . "\n"; }
 		}
 	}
 
 	# append next abstraction classes to abstraction string
-	foreach my $leaf (@{$next_class}) {
+	foreach my $leaf (@$next_class) {
 		if ($debug) { print STDERR "atree: $atree[0]\tleaf: $leaf\n"; }
-
-		#if ($#atree > 1 && 
-#		if ($atree[1] eq 'LITERAL' && 
-#		$leaf eq 'SYMBOLIC') {
-#			if ($debug) { print STDERR "replacing classes: " . Dumper($next_class); }
-
-#			#$abstraction = &update_abstraction("MATH:$leaf", [@$next_class[1 .. $#{$next_class}]], $debug);
-#			return &update_abstraction("MATH:$leaf", [@$next_class[1 .. $#{$next_class}]], $debug);
-#		}
 
 		if (ref $idx eq 'ARRAY') {
 			my $found = 0;
 
 			if ($debug) { print "leaf array: " . Dumper($idx) . "\n"; }
 
-			foreach my $item (@{$idx}) {
+			foreach my $item (@$idx) {
 				if (ref $item eq 'HASH') {
-					foreach (keys %{$item}) {
+					foreach (keys %$item) {
 						if ($_ eq $leaf) {
 							$idx = $item->{$_};
 							$found = 1;
@@ -232,7 +231,6 @@ sub update_abstraction {
 			$abstraction = &update_abstraction("$abstraction:$leaf", [@$next_class[1 .. $#{$next_class}]], $debug);
 
 		} else {
-	#		$idx = $idx->{$atree[$i]};
 			if (grep($leaf), $idx) {
 				$idx = $idx->{$leaf};
 

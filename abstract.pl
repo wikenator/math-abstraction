@@ -22,9 +22,15 @@ my $latexExpr = <STDIN>;
 chomp($latexExpr);
 
 if ($test) {
-	$abstraction = &update_abstraction('MATH', ['SYMBOLIC'], $debug);
+	$abstraction = &update_abstraction('MATH', ['LITERAL'], $debug);
+	print "$abstraction\n";
+	$abstraction = &update_abstraction($abstraction, ['EXPRESSION'], $debug);
+	print "$abstraction\n";
+	$abstraction = &update_abstraction($abstraction, ['SYMBOLIC'], $debug);
 	print "$abstraction\n";
 	$abstraction = &update_abstraction($abstraction, ['VARIABLE'], $debug);
+	print "$abstraction\n";
+	$abstraction = &update_abstraction($abstraction, ['LITERAL', 'FRACTION'], $debug);
 	print "$abstraction\n";
 
 } else {
