@@ -15,10 +15,10 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 @ISA = qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(abstract update_abstraction);
+@EXPORT_OK = qw(abstract compare_abstraction update_abstraction);
 %EXPORT_TAGS = (
-	DEFAULT => [qw(abstract update_abstraction)],
-	All	=> [qw(abstract update_abstraction)]
+	DEFAULT => [qw(abstract compare_abstraction update_abstraction)],
+	All	=> [qw(abstract compare_abstraction update_abstraction)]
 );
 
 our $debug;
@@ -42,7 +42,8 @@ our $abstract_tree = {
 			{ FRACTION => [
 				{ MIXED => [
 					'PERCENT'
-				]}
+				]},
+				'PERCENT'
 			]},
 			{ EXPRESSION => [
 				'ABSOLUTEVALUE',
@@ -84,8 +85,14 @@ our $abstract_tree = {
 				'ABSOLUTEVALUE',
 				'EXPONENTIAL',
 				'FACTORIAL',
+				{ 'DECIMAL' => [
+					'PERCENT'
+				]},
 				{ FRACTION => [
-					'MIXED'
+					{ 'MIXED' => [
+						'PERCENT'
+					]},
+					'PERCENT'
 				]},
 				'LOGARITHM',
 				'ROOT',
@@ -127,14 +134,32 @@ sub abstract {
 	return $detexExpr, $abstraction;
 }
 
+sub compare_abstraction {
+	my $new_abstract = shift;
+	my $old_abstract = shift;
+
+	if ($new_abstract eq '') {
+		return $old_abstract;
+
+	} elsif ($new_abstract eq 'SYMBOLIC' &&
+	$old_abstract eq 'LITERAL') {
+		return $new_abstract;
+
+#	} elsif ($new_abstract eq 'EXPRESSION' &&
+#	not grep(split(/:/, $old_abstract)[0], keys %{$abstract_tree->{MATH}->{SYMBOLIC}})) {
+#		return $new_abstract;
+	}
+
+	return $old_abstract;
+}
+
 sub update_abstraction {
 	my $abstraction = shift;
 	my $next_class = shift;
 	our $debug = shift;
 	$debug = 0 if not defined $debug;
 	our $abstract_tree;
-	my $idx = $abstract_tree;#->{'MATH'};
-	my $idx_cmp = $abstract_tree;
+	my $idx = $abstract_tree;
 	my @atree = split(':', $abstraction);
 
 	if ($debug) {
@@ -149,36 +174,38 @@ sub update_abstraction {
 	for my $i (0 .. $#atree) {
 		if ($debug) { print STDERR "atree: $atree[$i]\n"; }
 
-		if (ref $idx eq 'ARRAY') {
+		if ((ref $idx) eq 'ARRAY') {
 			my $found = 0;
 
-			foreach my $item (@$idx) {
-				if (ref $item eq 'HASH') {
-					foreach (keys %$item) {
+			foreach my $item (@{$idx}) {
+				if ((ref $item) eq 'HASH') {
+					foreach (keys %{$item}) {
 						if ($_ eq $atree[$i]) {
 							$idx = $item->{$_};
 							$found = 1;
 
 						} elsif ($_ eq @$next_class[0]) {
 							$idx = $item->{$_};
+							$found = 1;
 							last;
 						}
 					}
 
-					if (not $found) {
-						$abstraction = &update_abstraction("NOPARSE", [], $debug);
-
-						return $abstraction;
-					}
-
-				} elsif (ref \$item eq 'SCALAR' && 
+				} elsif ((ref \$item) eq 'SCALAR' && 
 				$item eq $atree[$i]) {
 					$idx = $item;
+					$found = 1;
 					last;
 				}
 			}
 
-			if ($debug) { print STDERR "arr tree: $atree[$i]\n" . Dumper($idx) . "\n"; }
+			if (not $found) {
+				$abstraction = &update_abstraction("NOPARSE", [], $debug);
+
+				return $abstraction;
+			}
+
+			if ($debug) { print STDERR "arr tree: $atree[$i]\n"; }
 
 		} else {
 			if (exists $idx->{@$next_class[0]}) {
@@ -190,22 +217,22 @@ sub update_abstraction {
 				$idx = $idx->{$atree[$i]};
 			}
 
-			if ($debug) { print STDERR "current tree: $atree[$i]\n" . Dumper($idx) . "\n"; }
+			if ($debug) { print STDERR "current tree: $atree[$i]\n"; }
 		}
 	}
 
 	# append next abstraction classes to abstraction string
-	foreach my $leaf (@$next_class) {
+	foreach my $leaf (@{$next_class}) {
 		if ($debug) { print STDERR "atree: $atree[0]\tleaf: $leaf\n"; }
 
-		if (ref $idx eq 'ARRAY') {
+		if ((ref $idx) eq 'ARRAY') {
 			my $found = 0;
 
 			if ($debug) { print "leaf array: " . Dumper($idx) . "\n"; }
 
-			foreach my $item (@$idx) {
-				if (ref $item eq 'HASH') {
-					foreach (keys %$item) {
+			foreach my $item (@{$idx}) {
+				if ((ref $item) eq 'HASH') {
+					foreach (keys %{$item}) {
 						if ($_ eq $leaf) {
 							$idx = $item->{$_};
 							$found = 1;
@@ -213,7 +240,7 @@ sub update_abstraction {
 						}
 					}
 
-				} elsif (ref \$item eq 'SCALAR' &&
+				} elsif ((ref \$item) eq 'SCALAR' &&
 				$item eq $leaf) {
 					$idx = $leaf;
 					$found = 1;

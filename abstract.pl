@@ -26,11 +26,9 @@ if ($test) {
 	print "$abstraction\n";
 	$abstraction = &update_abstraction($abstraction, ['EXPRESSION'], $debug);
 	print "$abstraction\n";
-	$abstraction = &update_abstraction($abstraction, ['SYMBOLIC'], $debug);
+	$abstraction = &update_abstraction($abstraction, ['ROOT'], $debug);
 	print "$abstraction\n";
-	$abstraction = &update_abstraction($abstraction, ['VARIABLE'], $debug);
-	print "$abstraction\n";
-	$abstraction = &update_abstraction($abstraction, ['EQUALITY'], $debug);
+	$abstraction = &update_abstraction($abstraction, ['LITERAL', 'EXPRESSION'], $debug);
 	print "$abstraction\n";
 
 } else {
