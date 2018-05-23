@@ -35,5 +35,5 @@ if ($test) {
 	($detexExpr, $abstraction) = &abstract($latexExpr, $debug);
 }
 
-print "detexed: $detexExpr\nabstraction: $abstraction\n";
+print "$detexExpr,$abstraction";
 exit();
