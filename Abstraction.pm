@@ -15,9 +15,9 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 @ISA = qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(abstract compare_inner_abstraction compare_inner_outer_abstraction update_abstraction);
+@EXPORT_OK = qw(abstract compare_inner_abstraction compare_outer_abstraction compare_inner_outer_abstraction update_abstraction);
 %EXPORT_TAGS = (
-	DEFAULT => [qw(abstract compare_inner_abstraction compare_inner_outer_abstraction update_abstraction)],
+	DEFAULT => [qw(abstract compare_inner_abstraction compare_outer_abstraction compare_inner_outer_abstraction update_abstraction)],
 	All	=> [qw(abstract compare_inner_abstraction compare_inner_outer_abstraction update_abstraction)]
 );
 
@@ -26,18 +26,22 @@ our $abstract_tree = {
 	MATH => {
 		LITERAL => [
 			'COORDINATE',
+			'FACTORIAL',
 			'INTERVAL',
 			'ORDEREDSET',
+			'PERCENT',
+			'RATIO',
 			'SEQUENCE',
+			'SET',
 			'TIME',
-			{ NUMBER => [
-				{ DECIMAL => [
-					'PERCENT'
-				]},
-				'ANGLE',
-				'DEGREE',
-				'FACTORIAL',
+			{ SET => [
+				'NUMBER'
+			]},
+			{ DECIMAL => [
 				'PERCENT'
+			]},
+			{ DEGREE => [
+				'DMS'
 			]},
 			{ FRACTION => [
 				{ MIXED => [
@@ -47,79 +51,109 @@ our $abstract_tree = {
 			]},
 			{ EXPRESSION => [
 				'ABSOLUTEVALUE',
+				'CEILING',
+				'COMPLEX',
+				'EQUALITY',
 				'EXPONENTIAL',
+				'FLOOR',
 				'LOGARITHM',
+				'MODULAR',
 				'POWER',
-				'ROOT'
+				'ROOT',
+				'TRIGONOMETRY'
 			]}
 		],
-		SYMBOLIC => {
-			VARIABLE => [
+		SYMBOLIC => [
+			'ANGLE',
+			'DEGREE',
+			'CONSTANT',
+			'COORDINATE',
+			'FACTORIAL',
+			'INFINITY',
+			'INTERVAL',
+			'ORDEREDSET',
+			'RATIO',
+			'SET',
+			{ SEQUENCE => [
+				'COORDINATE'
+			]},
+			{ INEQUALITY => [
 				'ANGLE',
-				'DEGREE',
-				'CONSTANT',
-				'COORDINATE',
-				'INFINITY',
-				'ORDEREDSET'
-			],
-			INEQUALITY => [
-				'ANGLE',
+				'COMPOUND',
 				'TRIGONOMETRY',
 				'SUMMATION'
-			],
-			EQUALITY => [
+			]},
+			{ SYSTEM => [
+				'EQUALITY',
+				'INEQUALITY',
+				'IVP',
+				'MODULAR',
+				'TABLEDATA'
+			]},
+			{ EQUALITY => [
+				'ABSOLUTEVALUE',
 				'ANGLE',
 				'COORDINATE',
 				'EXPLICIT',
+				'EXPONENTIAL',
 				'FUNCTION',
 				'IMPLICIT',
+				'LOGARITHM',
 				'MODULAR',
+				'SET',
 				'SUMMATION',
 				'SYSTEM',
 				'TRIGONOMETRY',
 				{ GEOMETRY => [
 					'ANGLE'
-				]}
-			],
-			EXPRESSION => [
-				'ABSOLUTEVALUE',
-				'EXPONENTIAL',
-				'FACTORIAL',
-				{ 'DECIMAL' => [
-					'PERCENT'
-				]},
-				{ FRACTION => [
-					{ 'MIXED' => [
-						'PERCENT'
-					]},
-					'PERCENT'
-				]},
-				'LOGARITHM',
-				'ROOT',
-				{ CALCULUS => [
-					'DIFFERENTIALEQN',
-					{ MULTIVAR => [
-						'DIFFERENTIAL',
-						'INTEGRAL',
-						'LIMIT',
-						'VECTOR'
-					]},
-					{ SINGLEVAR => [
-						'DIFFERENTIAL',
-						'INTEGRAL',
-						'LIMIT'
-					]}
-				]},
-				{ GEOMETRY => [
-					'ANGLE',
-					'TRIANGLE'
 				]},
 				{ LINEARALG => [
-					'MATRIX',
-					'VECTOR'
+					'MATRIX'
 				]}
-			]
-		}
+			]},
+			{ EXPRESSION => [
+				'ABSOLUTEVALUE',
+				'CEILING',
+				'COMPLEX',
+				'EXPONENTIAL',
+				'FLOOR',
+				'LOGARITHM',
+				'MODULAR',
+				'ROOT',
+				'TRIGONOMETRY'
+			]},
+			{ DECIMAL => [
+				'PERCENT'
+			]},
+			{ FRACTION => [
+				{ 'MIXED' => [
+					'PERCENT'
+				]},
+				'PERCENT'
+			]},
+			{ CALCULUS => [
+				'DIFFEQN',
+				{ MULTIVAR => [
+					'DIFFERENTIAL',
+					'INTEGRAL',
+					'LIMIT',
+					'VECTOR'
+				]},
+				{ SINGLEVAR => [
+					'DIFFERENTIAL',
+					'INTEGRAL',
+					'LIMIT'
+				]}
+			]},
+			{ GEOMETRY => [
+				'ANGLE',
+				'TRIANGLE'
+			]},
+			{ LINEARALG => [
+				'MATRIX',
+				'VECTOR'
+			]}
+		]
 	}
 };
 
@@ -137,9 +171,15 @@ sub abstract {
 sub compare_inner_abstraction {
 	my $new_abstract = shift;
 	my $old_abstract = shift;
+	my $debug = shift;
+
+	if ($debug) { print STDERR "old inner: $old_abstract, new inner: $new_abstract\n"; }
 
 	if ($new_abstract eq '') {
 		return $old_abstract;
+
+	} elsif ($old_abstract eq '') {
+		return $new_abstract;
 
 	} elsif ($new_abstract eq 'SYMBOLIC' and 
 	$old_abstract eq 'LITERAL') {
@@ -153,26 +193,99 @@ sub compare_inner_abstraction {
 	return $old_abstract;
 }
 
+sub compare_outer_abstraction {
+	my $old_abstract = shift;
+	my $new_abstract = shift;
+	my $debug = shift;
+
+	if ($debug) { print STDERR "old outer: $old_abstract, new outer: $new_abstract\n"; }
+
+	my $oa_first = ($old_abstract ne '') ? (split(':', $old_abstract))[0] : '';
+	my $na_first = (split(':', $new_abstract))[0];
+
+	if ($new_abstract eq '') {
+		return $old_abstract;
+
+	} elsif ($old_abstract eq '') {
+		return $new_abstract;
+	}
+
+	if ($oa_first ne '') {
+		if ($old_abstract eq $new_abstract) {
+			return $old_abstract;
+
+		} elsif ($oa_first eq $na_first) {
+			return $na_first;
+
+		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
+		} else {
+			return 'EXPRESSION';
+		}
+	}
+
+	return $old_abstract;
+}
+
 sub compare_inner_outer_abstraction {
 	my $new_inner_abstract = shift;
 	my $old_inner_abstract = shift;
 	my $new_outer_abstract = shift;
 	my $old_outer_abstract = shift;
+	my $debug = shift;
 	$new_inner_abstract = '' if not defined $new_inner_abstract;
 	$old_inner_abstract = '' if not defined $old_inner_abstract;
 	$new_outer_abstract = '' if not defined $new_outer_abstract;
 	$old_outer_abstract = '' if not defined $old_outer_abstract;
-	my ($ia, $oa);
+	my $ia = '';
+	my $oa = '';
 
 	if ($new_inner_abstract eq '') { $ia = $old_inner_abstract; }
 	if ($new_outer_abstract eq '') { $oa = $old_outer_abstract; }
+	# if old inner abstract is empty, old inner abstract should be new
 	if ($old_inner_abstract eq '') { $ia = $new_inner_abstract; }
+	# if old outer abstract is empty, old outer abstract should be new
 	if ($old_outer_abstract eq '') { $oa = $new_outer_abstract; }
 
-	my $ooa_first = (split(':', $old_outer_abstract))[0];
+	my $ooa_first = ($old_outer_abstract ne '') ? (split(':', $old_outer_abstract))[0] : '';
 	my $ooa_size = scalar (split(':', $old_outer_abstract));
 	my $noa_first = (split(':', $new_outer_abstract))[0];
 	my $noa_size = scalar (split(':', $new_outer_abstract));
+	
+	if ($debug) { print STDERR "OIA: $old_inner_abstract, NIA: $new_inner_abstract\nOOA: $old_outer_abstract, NOA: $new_outer_abstract\n"; }
+
+	## if new inner abstract is A:x and old inner abstract is A:y, new inner abstract should be A
+	## if new inner abstract is A and old inner abstract is B, new inner abstract should be EXPRESSION
+
+	# if old inner abstract is LITERAL and new inner abstract is SYMBOLIC, new inner abstract should be SYMBOLIC
+	# if new inner abstract is SYMBOLIC, new outer abstract should be EXPRESSION
+	if ($old_inner_abstract eq 'LITERAL' and
+	$new_inner_abstract eq 'SYMBOLIC') {
+		$ia = 'SYMBOLIC';
+		$oa = 'EXPRESSION';
+	}
+
+	if ($old_inner_abstract eq $new_inner_abstract and
+	$ia eq '') {
+		$ia = $old_inner_abstract;
+	}
+
+	# if new outer abstract is A:x and old outer abstract is A:y, new outer abstract should be A
+	if ($ooa_first ne '') {
+		if ($old_outer_abstract eq $new_outer_abstract) {
+			$oa = $old_outer_abstract;
+
+		} elsif ($ooa_first eq $noa_first) {
+			$oa = $noa_first;
+
+		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
+		} else {
+			$oa = 'EXPRESSION';
+		}
+	}
+
+	if ($debug) { print STDERR "selected abstractions: $ia, $oa\n"; }
+
+	return $ia, $oa;
 
 	if ($old_outer_abstract ne '') {
 		$ia = $new_inner_abstract;
@@ -182,13 +295,13 @@ sub compare_inner_outer_abstraction {
 
 		} elsif ($ooa_size != $noa_size and
 		$ooa_first eq $noa_first and
-		grep($ooa_first, keys %{$abstract_tree->{MATH}->{SYMBOLIC}})) {
+		grep($ooa_first, keys @{$abstract_tree->{MATH}->{SYMBOLIC}})) {
 			$oa = $ooa_first;
 
 		} elsif ($new_inner_abstract eq 'LITERAL') {
 			if ($ooa_size != $noa_size and
 			$ooa_first eq $noa_first and
-			grep($ooa_first, keys %{$abstract_tree->{MATH}->{SYMBOLIC}})) {
+			grep($ooa_first, keys @{$abstract_tree->{MATH}->{SYMBOLIC}})) {
 				$oa = $ooa_first;
 
 			} else {
@@ -197,11 +310,9 @@ sub compare_inner_outer_abstraction {
 		}
 
 	} elsif ($new_inner_abstract eq 'SYMBOLIC' and
-	not grep($ooa_first, keys %{$abstract_tree->{MATH}->{SYMBOLIC}})) {
+	not grep($ooa_first, keys @{$abstract_tree->{MATH}->{SYMBOLIC}})) {
 		$oa = "EXPRESSION:$old_outer_abstract";
 	}
-
-	return $ia, $oa;
 }
 
 sub update_abstraction {
