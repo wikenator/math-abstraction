@@ -161,10 +161,15 @@ our $abstract_tree = {
 sub abstract {
 	my $latexExpr = shift;
 	our $debug = shift;
+	my $coord = 0;
 	my $detexExpr;
 	my $abstraction;
 
+	if ($latexExpr =~ /^\([^\(\)\,]+?(\,[^\(\)\,]+?)+\)$/) { $coord = 1; }
+
 	($detexExpr, $abstraction) = &detex($latexExpr, 'f', $debug, 1);
+
+	if ($coord and ($detexExpr !~ /^\(.*?\)$/)) { $detexExpr = "($detexExpr)"; }
 
 	return $detexExpr, $abstraction;
 }
@@ -212,6 +217,8 @@ sub compare_outer_abstraction {
 	}
 
 	if ($oa_first ne '') {
+		if ($debug) { print STDERR "comparing firsts\n"; }
+
 		if ($old_abstract eq $new_abstract) {
 			return $old_abstract;
 
@@ -272,6 +279,8 @@ sub compare_inner_outer_abstraction {
 
 	# if new outer abstract is A:x and old outer abstract is A:y, new outer abstract should be A
 	if ($ooa_first ne '') {
+		if ($debug) { print STDERR "comparing inner outer firsts\n"; }
+
 		if ($old_outer_abstract eq $new_outer_abstract) {
 			$oa = $old_outer_abstract;
 
@@ -280,7 +289,12 @@ sub compare_inner_outer_abstraction {
 
 		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
 		} elsif ($ia ne 'LITERAL') {
-			$oa = 'EXPRESSION';
+			if ($old_outer_abstract eq 'ORDEREDSET') {
+				$oa = $old_outer_abstract;
+
+			} else {
+				$oa = 'EXPRESSION';
+			}
 		}
 	}
 

@@ -37,21 +37,19 @@ if ($test) {
 	print "$abstraction\n";
 
 } else {
-	if ($latexExpr =~ /=/) {
-		my @args = split('=', $latexExpr);
+	if ($latexExpr =~ /(<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=)/ and
+	$latexExpr !~ /_\{.*?=.*?\}/ and
+	$latexExpr !~ /\^\{.*?=.*?\}/) {
+		my @args_split = ($latexExpr =~ /(<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=)/);
+		my @args = split(/<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=/, $latexExpr);
+		my $eq_ineq = (($args_split[0] eq '=' or $args_split[0] eq '\doteq') ? 'EQUALITY' : 'INEQUALITY');
 		my @abstract_tree;
 
 		if (scalar @args > 2) {
-			$abstraction = 'MATH:SYMBOLIC:EQUALITY:COMPOUND';
+			$abstraction = "MATH:SYMBOLIC:$eq_ineq:COMPOUND";
 
 		} else {
 			foreach my $i (0 .. $#args) {
-#				if (not $args[$i] and
-#				$abstraction eq '') {
-#					$abstraction = 'NOPARSE';
-	#				next;
-#				}
-
 				($args[$i], $temp_abstract) = &abstract($args[$i], $debug);
 				@abstract_tree = split(':', $temp_abstract);
 
@@ -72,21 +70,21 @@ if ($test) {
 					(not defined $abstract_tree[2] or
 					($abstract_tree[2] and
 					$abstract_tree[2] ne 'EXPRESSION'))) {
-						$abstraction = 'MATH:LITERAL:EXPRESSION:EQUALITY';
+						$abstraction = "MATH:LITERAL:EXPRESSION:$eq_ineq";
 
 					# =a
 					} else {
-						$abstraction = 'MATH:SYMBOLIC:EQUALITY';
+						$abstraction = "MATH:SYMBOLIC:$eq_ineq";
 					}
 
 				} elsif (not defined $args[$i]) {
 					# LITERAL=
 					if ($abstraction =~ /^LITERAL/) {
-						$abstraction = 'MATH:LITERAL:EXPRESSION:EQUALITY';
+						$abstraction = "MATH:LITERAL:EXPRESSION:$eq_ineq";
 
 					# a=
 					} else {
-						$abstraction = 'MATH:SYMBOLIC:EQUALITY';
+						$abstraction = "MATH:SYMBOLIC:$eq_ineq";
 					}
 
 				} elsif ($abstraction =~ /^LITERAL/) {
@@ -96,31 +94,30 @@ if ($test) {
 					(not defined $abstract_tree[2] or
 					($abstract_tree[2] and
 					$abstract_tree[2] ne 'EXPRESSION'))) {
-						$abstraction = 'MATH:LITERAL:EXPRESSION:EQUALITY';
+						$abstraction = "MATH:LITERAL:EXPRESSION:$eq_ineq";
 
 					# a=b
 					} else {
-						$abstraction = 'MATH:SYMBOLIC:EQUALITY';
+						$abstraction = "MATH:SYMBOLIC:$eq_ineq";
 					}
 
 				} elsif ($abstraction eq 'MATH:SYMBOLIC:CONSTANT') {
-					$abstraction = 'MATH:SYMBOLIC:EQUALITY:EXPLICIT';
+					$abstraction = "MATH:SYMBOLIC:$eq_ineq:EXPLICIT";
 
 				} elsif ($abstraction eq 'MATH:SYMBOLIC:EXPRESSION:FUNCTION') {
-					$abstraction = 'MATH:SYMBOLIC:EQUALITY:EXPLICIT:FUNCTION';
+					$abstraction = "MATH:SYMBOLIC:$eq_ineq:EXPLICIT:FUNCTION";
 
 				} else {
-					$abstraction = 'MATH:SYMBOLIC:EQUALITY:IMPLICIT';
+					$abstraction = "MATH:SYMBOLIC:$eq_ineq:IMPLICIT";
 				}
 			}
 		}
 
-
 		if (scalar @args == 2) {
-			$detexExpr = join('=', @args);
+			$detexExpr = join($args_split[0], @args);
 
 		} else {
-			$detexExpr = $args[0] . '=';
+			$detexExpr = $args[0] . $args_split[0];
 		}
 
 	} else {
@@ -128,5 +125,5 @@ if ($test) {
 	}
 }
 
-print "$detexExpr,$abstraction";
+print "$detexExpr#@#$abstraction";
 exit();
