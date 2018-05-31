@@ -39,37 +39,89 @@ if ($test) {
 } else {
 	if ($latexExpr =~ /=/) {
 		my @args = split('=', $latexExpr);
+		my @abstract_tree;
 
-		foreach my $i (0 .. $#args) {
-			if (not $args[$i]) {
-				$abstraction = 'NOPARSE';
-				next;
-			}
+		if (scalar @args > 2) {
+			$abstraction = 'MATH:SYMBOLIC:EQUALITY:COMPOUND';
 
-			($args[$i], $temp_abstract) = &abstract($args[$i], $debug);
+		} else {
+			foreach my $i (0 .. $#args) {
+#				if (not $args[$i] and
+#				$abstraction eq '') {
+#					$abstraction = 'NOPARSE';
+	#				next;
+#				}
 
-			if ($abstraction eq '') {
-				$abstraction = $temp_abstract;
+				($args[$i], $temp_abstract) = &abstract($args[$i], $debug);
+				@abstract_tree = split(':', $temp_abstract);
 
-			} elsif ($abstraction eq 'NOPARSE') {
-				my @abstract_tree = split(':', $temp_abstract);
+				if ($abstraction eq '') {
+					# =a
+					if (not defined $args[$i]) {
+						$abstraction = 'NOPARSE';
 
-				if ($abstract_tree[1] and
-				$abstract_tree[1] eq 'LITERAL' and
-				(not $abstract_tree[2] or
-				($abstract_tree[2] and
-				$abstract_tree[2] ne 'EXPRESSION'))) {
-					$abstraction = 'LITERAL:EXPRESSION:EQUALITY';
+					# a=b
+					} else {
+						$abstraction = $temp_abstract;
+					}
+
+				} elsif ($abstraction eq 'NOPARSE') {
+					# =LITERAL
+					if ($abstract_tree[1] and
+					$abstract_tree[1] eq 'LITERAL' and
+					(not defined $abstract_tree[2] or
+					($abstract_tree[2] and
+					$abstract_tree[2] ne 'EXPRESSION'))) {
+						$abstraction = 'MATH:LITERAL:EXPRESSION:EQUALITY';
+
+					# =a
+					} else {
+						$abstraction = 'MATH:SYMBOLIC:EQUALITY';
+					}
+
+				} elsif (not defined $args[$i]) {
+					# LITERAL=
+					if ($abstraction =~ /^LITERAL/) {
+						$abstraction = 'MATH:LITERAL:EXPRESSION:EQUALITY';
+
+					# a=
+					} else {
+						$abstraction = 'MATH:SYMBOLIC:EQUALITY';
+					}
+
+				} elsif ($abstraction =~ /^LITERAL/) {
+					# LITERAL=a
+					if ($abstract_tree[1] and
+					$abstract_tree[1] eq 'LITERAL' and
+					(not defined $abstract_tree[2] or
+					($abstract_tree[2] and
+					$abstract_tree[2] ne 'EXPRESSION'))) {
+						$abstraction = 'MATH:LITERAL:EXPRESSION:EQUALITY';
+
+					# a=b
+					} else {
+						$abstraction = 'MATH:SYMBOLIC:EQUALITY';
+					}
+
+				} elsif ($abstraction eq 'MATH:SYMBOLIC:CONSTANT') {
+					$abstraction = 'MATH:SYMBOLIC:EQUALITY:EXPLICIT';
+
+				} elsif ($abstraction eq 'MATH:SYMBOLIC:EXPRESSION:FUNCTION') {
+					$abstraction = 'MATH:SYMBOLIC:EQUALITY:EXPLICIT:FUNCTION';
 
 				} else {
-					$abstraction = 'SYMBOLIC:EQUALITY';
+					$abstraction = 'MATH:SYMBOLIC:EQUALITY:IMPLICIT';
 				}
 			}
 		}
 
-		if ($#args > 2) { $abstraction = 'SYMBOLIC:EQUALITY:COMPOUND'; }
 
-		$detexExpr = join('=', @args);
+		if (scalar @args == 2) {
+			$detexExpr = join('=', @args);
+
+		} else {
+			$detexExpr = $args[0] . '=';
+		}
 
 	} else {
 		($detexExpr, $abstraction) = &abstract($latexExpr, $debug);
