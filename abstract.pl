@@ -8,7 +8,8 @@ use warnings;
 use Data::Dumper;
 use Getopt::Long qw(GetOptions);
 Getopt::Long::Configure qw(gnu_getopt);
-use Abstraction qw(abstract update_abstraction);
+use Detex qw(abstract);
+use Abstraction qw(update_abstraction);
 
 my $debug = 0;
 my $test = 0;

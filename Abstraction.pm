@@ -4,21 +4,20 @@ package Abstraction;
 # Creation Date: May 2018
 # Description: Abstract math objects into string representations.
 
-use lib('../detexify');
+use lib('/home/arnold/git_repos/detexify');
 
 use strict;
 use warnings;
-use Detex qw(detex);
 use Exporter;
 use Data::Dumper;
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 @ISA = qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(abstract compare_inner_abstraction compare_outer_abstraction compare_inner_outer_abstraction update_abstraction);
+@EXPORT_OK = qw(compare_inner_abstraction compare_outer_abstraction compare_inner_outer_abstraction update_abstraction);
 %EXPORT_TAGS = (
-	DEFAULT => [qw(abstract compare_inner_abstraction compare_outer_abstraction compare_inner_outer_abstraction update_abstraction)],
-	All	=> [qw(abstract compare_inner_abstraction compare_inner_outer_abstraction update_abstraction)]
+	DEFAULT => [qw(compare_inner_abstraction compare_outer_abstraction compare_inner_outer_abstraction update_abstraction)],
+	All	=> [qw(compare_inner_abstraction compare_inner_outer_abstraction update_abstraction)]
 );
 
 our $debug;
@@ -157,22 +156,6 @@ our $abstract_tree = {
 		]
 	}
 };
-
-sub abstract {
-	my $latexExpr = shift;
-	our $debug = shift;
-	my $coord = 0;
-	my $detexExpr;
-	my $abstraction;
-
-	if ($latexExpr =~ /^\([^\(\)\,]+?(\,[^\(\)\,]+?)+\)$/) { $coord = 1; }
-
-	($detexExpr, $abstraction) = &detex($latexExpr, 'f', $debug, 1);
-
-	if ($coord and ($detexExpr !~ /^\(.*?\)$/)) { $detexExpr = "($detexExpr)"; }
-
-	return $detexExpr, $abstraction;
-}
 
 sub compare_inner_abstraction {
 	my $new_abstract = shift;
