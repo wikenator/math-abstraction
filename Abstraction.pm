@@ -208,6 +208,10 @@ sub compare_outer_abstraction {
 		} elsif ($oa_first eq $na_first) {
 			return $na_first;
 
+		} elsif ($oa_first eq 'EXPRESSION' and
+		$new_abstract eq 'ORDEREDSET') {
+			return $new_abstract;
+
 		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
 		} else {
 			return 'EXPRESSION';
