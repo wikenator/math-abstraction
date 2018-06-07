@@ -102,7 +102,10 @@ if ($test) {
 						$abstraction = "MATH:SYMBOLIC:$eq_ineq";
 					}
 
-				} elsif ($abstraction eq 'MATH:SYMBOLIC:CONSTANT') {
+				} elsif ($abstraction eq 'MATH:SYMBOLIC:CONSTANT' or
+				$abstraction eq 'MATH:SYMBOLIC:ANGLE' or
+				$temp_abstract eq 'MATH:SYMBOLIC:CONSTANT' or
+				$temp_abstract eq 'MATH:SYMBOLIC:ANGLE') {
 					$abstraction = "MATH:SYMBOLIC:$eq_ineq:EXPLICIT";
 
 				} elsif ($abstraction eq 'MATH:SYMBOLIC:EXPRESSION:FUNCTION') {

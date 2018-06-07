@@ -56,7 +56,6 @@ our $abstract_tree = {
 				'FLOOR',
 				'LOGARITHM',
 				'MODULAR',
-				'POWER',
 				'ROOT',
 				'TRIGONOMETRY'
 			]}
@@ -206,11 +205,22 @@ sub compare_outer_abstraction {
 			return $old_abstract;
 
 		} elsif ($oa_first eq $na_first) {
-			return $na_first;
+			if ($oa_first eq 'EXPRESSION') {
+				return $na_first;
+
+			} elsif (scalar (split(':', $new_abstract)) > 1) {
+				return $new_abstract;
+
+			} else {
+				return $old_abstract;
+			}
 
 		} elsif ($oa_first eq 'EXPRESSION' and
 		$new_abstract eq 'ORDEREDSET') {
 			return $new_abstract;
+
+		} elsif ($old_abstract eq 'ORDEREDSET') {
+			return $old_abstract;
 
 		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
 		} else {
