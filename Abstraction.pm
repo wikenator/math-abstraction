@@ -196,17 +196,32 @@ sub compare_outer_abstraction {
 
 	} elsif ($old_abstract eq '') {
 		return $new_abstract;
+
+	} elsif ($old_abstract eq $new_abstract) {
+		return $old_abstract;
+
+	} elsif ($old_abstract eq 'ORDEREDSET') {
+		return $old_abstract;
+
+	} elsif ($old_abstract eq 'PERCENT' and
+	$new_abstract eq 'FRACTION') {
+		return "$new_abstract:$old_abstract";
 	}
 
 	if ($oa_first ne '') {
 		if ($debug) { print STDERR "comparing firsts\n"; }
 
-		if ($old_abstract eq $new_abstract) {
-			return $old_abstract;
-
-		} elsif ($oa_first eq $na_first) {
+		if ($oa_first eq $na_first) {
 			if ($oa_first eq 'EXPRESSION') {
 				return $na_first;
+
+			} elsif ($oa_first eq 'FRACTION') {
+				if ((split(':', $new_abstract))[1]) {
+					return "$old_abstract:" . (split(':', $new_abstract))[1];
+
+				} else {
+					return $old_abstract;
+				}
 
 			} elsif (scalar (split(':', $new_abstract)) > 1) {
 				return $new_abstract;
@@ -215,11 +230,20 @@ sub compare_outer_abstraction {
 				return $old_abstract;
 			}
 
-		} elsif ($oa_first eq 'EXPRESSION' and
-		$new_abstract eq 'ORDEREDSET') {
+		} elsif ($oa_first eq 'EXPRESSION') {
+			if ($new_abstract eq 'ORDEREDSET') {
+				return $new_abstract;
+
+			} elsif ($new_abstract eq 'FRACTION') {
+				return $old_abstract;
+			}
+
+		} elsif ($na_first eq 'EXPRESSION' and
+		$old_abstract eq 'CONSTANT') {
 			return $new_abstract;
 
-		} elsif ($old_abstract eq 'ORDEREDSET') {
+		} elsif ($oa_first eq 'FRACTION' and
+		$new_abstract eq 'CONSTANT') {
 			return $old_abstract;
 
 		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
