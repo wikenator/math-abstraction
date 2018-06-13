@@ -103,7 +103,12 @@ our $abstract_tree = {
 				{ LINEARALG => [
 					'MATRIX',
 					'VECTOR'
-				]}
+				]},
+				{ CALCULUS => {
+					SINGLEVAR => [
+						'VECTOR'
+					]}
+				}
 			]},
 			{ EXPRESSION => [
 				'ABSOLUTEVALUE',
@@ -139,6 +144,7 @@ our $abstract_tree = {
 				SINGLEVAR => [
 					'INTEGRAL',
 					'LIMIT',
+					'VECTOR',
 					{ DIFFERENTIAL => [
 						'ODE'
 					]}

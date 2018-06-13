@@ -39,8 +39,10 @@ if ($test) {
 
 } else {
 	if ($latexExpr =~ /(<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=)/ and
-	$latexExpr !~ /_\{.*?=.*?\}/ and
-	$latexExpr !~ /\^\{.*?=.*?\}/) {
+	$latexExpr !~ /_\{[^\{\}]*?=[^\{\}]*?\}/ and
+	$latexExpr !~ /\^\{[^\{\}]*?=[^\{\}]*?\}/) {
+		if ($debug) { print STDERR "equality found\n"; }
+
 		my @args_split = ($latexExpr =~ /(<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=)/);
 		my @args = split(/<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=/, $latexExpr);
 		my $eq_ineq = (($args_split[0] eq '=' or $args_split[0] eq '\doteq') ? 'EQUALITY' : 'INEQUALITY');
@@ -108,8 +110,12 @@ if ($test) {
 				$temp_abstract eq 'MATH:SYMBOLIC:ANGLE') {
 					$abstraction = "MATH:SYMBOLIC:$eq_ineq:EXPLICIT";
 
-				} elsif ($abstraction eq 'MATH:SYMBOLIC:EXPRESSION:FUNCTION') {
-					$abstraction = "MATH:SYMBOLIC:$eq_ineq:EXPLICIT:FUNCTION";
+				} elsif ($abstraction eq 'MATH:SYMBOLIC:EXPRESSION:FUNCTION' or
+				$abstraction eq 'MATH:SYMBOLIC:LINEARALG:VECTOR' or
+				$abstraction eq 'MATH:SYMBOLIC:CALCULUS:SINGLEVAR:VECTOR' or
+				$abstraction eq 'MATH:SYMBOLIC:CALCULUS:MULTIVAR:VECTOR') {
+					my @a = split(':', $abstraction);
+					$abstraction = "$a[0]:$a[1]:$eq_ineq:" . join(':', @a[2 .. $#a]);
 
 				} else {
 					$abstraction = "MATH:SYMBOLIC:$eq_ineq:IMPLICIT";
@@ -125,6 +131,8 @@ if ($test) {
 		}
 
 	} else {
+		if ($debug) { print STDERR "no equality found\n"; }
+
 		($detexExpr, $abstraction) = &abstract($latexExpr, $debug);
 	}
 }
