@@ -167,7 +167,7 @@ sub compare_inner_abstraction {
 	my $old_abstract = shift;
 	my $debug = shift;
 
-	if ($debug) { print STDERR "old inner: $old_abstract, new inner: $new_abstract\n"; }
+	if ($debug) { print STDERR "COMPIA old inner: $old_abstract, new inner: $new_abstract\n"; }
 
 	if ($new_abstract eq '') {
 		return $old_abstract;
@@ -192,7 +192,7 @@ sub compare_outer_abstraction {
 	my $old_abstract = shift;
 	my $debug = shift;
 
-	if ($debug) { print STDERR "old outer: $old_abstract, new outer: $new_abstract\n"; }
+	if ($debug) { print STDERR "COMPOA old outer: $old_abstract, new outer: $new_abstract\n"; }
 
 	my $oa_first = ($old_abstract ne '') ? (split(':', $old_abstract))[0] : '';
 	my $na_first = (split(':', $new_abstract))[0];
@@ -215,7 +215,7 @@ sub compare_outer_abstraction {
 	}
 
 	if ($oa_first ne '') {
-		if ($debug) { print STDERR "comparing firsts\n"; }
+		if ($debug) { print STDERR "COMPOA comparing firsts\n"; }
 
 		if ($oa_first eq $na_first) {
 			if ($oa_first eq 'EXPRESSION') {
@@ -286,7 +286,7 @@ sub compare_inner_outer_abstraction {
 	my $noa_first = (split(':', $new_outer_abstract))[0];
 	my $noa_size = scalar (split(':', $new_outer_abstract));
 	
-	if ($debug) { print STDERR "OIA: $old_inner_abstract, NIA: $new_inner_abstract\nOOA: $old_outer_abstract, NOA: $new_outer_abstract\n"; }
+	if ($debug) { print STDERR "COMPIAOA OIA: $old_inner_abstract, NIA: $new_inner_abstract\nOOA: $old_outer_abstract, NOA: $new_outer_abstract\n"; }
 
 	## if new inner abstract is A:x and old inner abstract is A:y, new inner abstract should be A
 	## if new inner abstract is A and old inner abstract is B, new inner abstract should be EXPRESSION
@@ -306,7 +306,7 @@ sub compare_inner_outer_abstraction {
 
 	# if new outer abstract is A:x and old outer abstract is A:y, new outer abstract should be A
 	if ($ooa_first ne '') {
-		if ($debug) { print STDERR "comparing inner outer firsts\n"; }
+		if ($debug) { print STDERR "COMPIAOA comparing inner outer firsts\n"; }
 
 		if ($old_outer_abstract eq $new_outer_abstract) {
 			$oa = $old_outer_abstract;
@@ -325,7 +325,7 @@ sub compare_inner_outer_abstraction {
 		}
 	}
 
-	if ($debug) { print STDERR "selected abstractions: $ia, $oa\n"; }
+	if ($debug) { print STDERR "COMPIAOA selected abstractions: $ia, $oa\n"; }
 
 	return $ia, $oa;
 }
@@ -341,7 +341,7 @@ sub update_abstraction {
 
 	if ($debug) {
 		print STDERR Dumper($next_class);
-		print STDERR "abstraction: $abstraction\n";
+		print STDERR "UPDATEABS abstraction: $abstraction\n";
 	}
 
 	# return current abstraction if next_class is empty
@@ -349,7 +349,7 @@ sub update_abstraction {
 
 	# traverse abstraction tree up until the current abstract node
 	for my $i (0 .. $#atree) {
-		if ($debug) { print STDERR "atree: $atree[$i]\n"; }
+		if ($debug) { print STDERR "UPDATEABS atree: $atree[$i]\n"; }
 
 		if ((ref $idx) eq 'ARRAY') {
 			my $found = 0;
@@ -382,7 +382,7 @@ sub update_abstraction {
 				return $abstraction;
 			}
 
-			if ($debug) { print STDERR "arr tree: $atree[$i]\n"; }
+			if ($debug) { print STDERR "UPDATEABS arr tree: $atree[$i]\n"; }
 
 		} else {
 			if (exists $idx->{@$next_class[0]}) {
@@ -394,18 +394,18 @@ sub update_abstraction {
 				$idx = $idx->{$atree[$i]};
 			}
 
-			if ($debug) { print STDERR "current tree: $atree[$i]\n"; }
+			if ($debug) { print STDERR "UPDATEABS current tree: $atree[$i]\n"; }
 		}
 	}
 
 	# append next abstraction classes to abstraction string
 	foreach my $leaf (@{$next_class}) {
-		if ($debug) { print STDERR "atree: $atree[0]\tleaf: $leaf\n"; }
+		if ($debug) { print STDERR "UPDATEABS atree: $atree[0]\tleaf: $leaf\n"; }
 
 		if ((ref $idx) eq 'ARRAY') {
 			my $found = 0;
 
-			if ($debug) { print "leaf array: " . Dumper($idx) . "\n"; }
+			if ($debug) { print "UPDATEABS leaf array: " . Dumper($idx) . "\n"; }
 
 			foreach my $item (@{$idx}) {
 				if ((ref $item) eq 'HASH') {
