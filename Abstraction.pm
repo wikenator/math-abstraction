@@ -284,7 +284,7 @@ sub compare_inner_outer_abstraction {
 	my $noa_first = (split(':', $new_outer_abstract))[0];
 	my $noa_size = scalar (split(':', $new_outer_abstract));
 	
-	if ($debug) { print STDERR "COMPIAOA OIA: $old_inner_abstract, NIA: $new_inner_abstract\nOOA: $old_outer_abstract, NOA: $new_outer_abstract\n"; }
+	if ($debug) { print STDERR "COMPIAOA OIA: $old_inner_abstract, NIA: $new_inner_abstract\n\tOOA: $old_outer_abstract, NOA: $new_outer_abstract\n"; }
 
 	## if new inner abstract is A:x and old inner abstract is A:y, new inner abstract should be A
 	## if new inner abstract is A and old inner abstract is B, new inner abstract should be EXPRESSION
@@ -314,7 +314,8 @@ sub compare_inner_outer_abstraction {
 
 		# if new outer abstract is A and old outer abstract is B, new outer abstract should be EXPRESSION
 		} elsif ($ia ne 'LITERAL') {
-			if ($old_outer_abstract eq 'ORDEREDSET') {
+			if ($old_outer_abstract eq 'ORDEREDSET' or
+			$old_outer_abstract eq 'SET') {
 				$oa = $old_outer_abstract;
 
 			} else {
