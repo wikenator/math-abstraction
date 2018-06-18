@@ -32,9 +32,6 @@ our $abstract_tree = {
 			'SEQUENCE',
 			'SET',
 			'TIME',
-			{ SET => [
-				'NUMBER'
-			]},
 			{ DECIMAL => [
 				'PERCENT'
 			]},
@@ -206,7 +203,8 @@ sub compare_outer_abstraction {
 	} elsif ($old_abstract eq $new_abstract) {
 		return $old_abstract;
 
-	} elsif ($old_abstract eq 'ORDEREDSET') {
+	} elsif ($old_abstract eq 'ORDEREDSET' or
+	$old_abstract eq 'SET') {
 		return $old_abstract;
 
 	} elsif ($old_abstract eq 'PERCENT' and
