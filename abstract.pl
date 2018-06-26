@@ -38,14 +38,14 @@ if ($test) {
 	print "$abstraction\n";
 
 } else {
-	if ($latexExpr =~ /(<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=)/ and
+	if ($latexExpr =~ /(<=|>=|\\equiv|\\le[^f]|\\ge|\\doteq|<|>|=)/ and
 	$latexExpr !~ /_\{[^\{\}]*?=[^\{\}]*?\}/ and
 	$latexExpr !~ /\^\{[^\{\}]*?=[^\{\}]*?\}/) {
 		if ($debug) { print STDERR "equality found\n"; }
 
-		my @args_split = ($latexExpr =~ /(<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=)/);
-		my @args = split(/<=|>=|\\le[^f]|\\ge|\\doteq|<|>|=/, $latexExpr);
-		my $eq_ineq = (($args_split[0] eq '=' or $args_split[0] eq '\doteq') ? 'EQUALITY' : 'INEQUALITY');
+		my @args_split = ($latexExpr =~ /(<=|>=|\\equiv|\\le[^f]|\\ge|\\doteq|<|>|=)/);
+		my @args = split(/<=|>=|\\equiv|\\le[^f]|\\ge|\\doteq|<|>|=/, $latexExpr);
+		my $eq_ineq = (($args_split[0] eq '=' or $args_split[0] eq '\doteq' or $args_split[0] eq '\equiv') ? 'EQUALITY' : 'INEQUALITY');
 		my @abstract_tree;
 
 		if (scalar @args > 2) {
@@ -55,6 +55,8 @@ if ($test) {
 			foreach my $i (0 .. $#args) {
 				($args[$i], $temp_abstract) = &abstract($args[$i], $debug);
 				@abstract_tree = split(':', $temp_abstract);
+
+				if ($debug) { print STDERR "abs: $abstraction\ntemp abs: $temp_abstract\n"; }
 
 				if ($abstraction eq '') {
 					# =a
@@ -82,7 +84,7 @@ if ($test) {
 
 				} elsif (not defined $args[$i]) {
 					# LITERAL=
-					if ($abstraction =~ /^LITERAL/) {
+					if ($abstraction =~ /^MATH:LITERAL/) {
 						$abstraction = "MATH:LITERAL:EXPRESSION:$eq_ineq";
 
 					# a=
@@ -90,18 +92,33 @@ if ($test) {
 						$abstraction = "MATH:SYMBOLIC:$eq_ineq";
 					}
 
-				} elsif ($abstraction =~ /^LITERAL/) {
+				} elsif ($abstraction =~ /^MATH:LITERAL/) {
 					# LITERAL=a
 					if ($abstract_tree[1] and
-					$abstract_tree[1] eq 'LITERAL' and
-					(not defined $abstract_tree[2] or
-					($abstract_tree[2] and
-					$abstract_tree[2] ne 'EXPRESSION'))) {
-						$abstraction = "MATH:LITERAL:EXPRESSION:$eq_ineq";
+					$abstract_tree[1] eq 'LITERAL') {
+						if (not defined $abstract_tree[2] or
+						($abstract_tree[2] and
+						$abstract_tree[2] ne 'EXPRESSION')) {
+							$abstraction = "MATH:LITERAL:EXPRESSION:$eq_ineq";
+
+						} elsif ($abstract_tree[3] and
+						$abstract_tree[3] eq 'MODULAR') {
+							$abstraction = "MATH:LITERAL:$eq_ineq:$abstract_tree[3]";
+						}
 
 					# a=b
 					} else {
-						$abstraction = "MATH:SYMBOLIC:$eq_ineq";
+						if ($abstract_tree[3] and
+						$abstract_tree[3] eq 'MODULAR') {
+							$abstraction = "MATH:SYMBOLIC:$eq_ineq:$abstract_tree[3]";
+
+						} elsif ($abstract_tree[1] and
+						$abstract_tree[1] eq 'SYMBOLIC') {
+							$abstraction = "MATH:SYMBOLIC:$eq_ineq:IMPLICIT";
+
+						} else {
+							$abstraction = "MATH:SYMBOLIC:$eq_ineq";
+						}
 					}
 
 				} elsif ($abstraction eq 'MATH:SYMBOLIC:CONSTANT' or
@@ -118,7 +135,15 @@ if ($test) {
 					$abstraction = "$a[0]:$a[1]:$eq_ineq:" . join(':', @a[2 .. $#a]);
 
 				} else {
-					$abstraction = "MATH:SYMBOLIC:$eq_ineq:IMPLICIT";
+					if ($abstract_tree[1] and
+					$abstract_tree[1] eq 'LITERAL' and
+					$abstract_tree[3] and
+					$abstract_tree[3] eq 'MODULAR') {
+						$abstraction = "MATH:SYMBOLIC:$eq_ineq:$abstract_tree[3]";
+
+					} else {
+						$abstraction = "MATH:SYMBOLIC:$eq_ineq:IMPLICIT";
+					}
 				}
 			}
 		}

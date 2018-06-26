@@ -204,7 +204,9 @@ sub compare_outer_abstraction {
 		return $old_abstract;
 
 	} elsif ($old_abstract eq 'ORDEREDSET' or
-	$old_abstract eq 'SET') {
+	$old_abstract eq 'SET' or
+	$old_abstract eq 'EXPRESSION:COMPLEX' or
+	$old_abstract eq 'EXPRESSION:MODULAR') {
 		return $old_abstract;
 
 	} elsif ($old_abstract eq 'PERCENT' and
